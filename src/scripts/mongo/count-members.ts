@@ -1,12 +1,7 @@
-import { logger } from '../logger.js'
-import { client, database } from '../mongo.js'
-import type { Workspace } from '../types/workspace.js'
-
-interface WorkspaceMembersCount {
-  active: number
-  inactive: number
-  total: number
-}
+import { logger } from '../../logger.js'
+import { client, database } from '../../mongo.js'
+import type { WorkspaceMembersCount } from '../../types/workspace-members-count.js'
+import type { Workspace } from '../../types/workspace.js'
 
 interface AggregateCountResult {
   _id: { userSuspendedFromWorkspace: boolean; userLocked: boolean }

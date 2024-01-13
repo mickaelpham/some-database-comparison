@@ -67,3 +67,9 @@ more than 13 GB on my machine! But it does work and it takes "only" **2500 ms**
 on average to return the result of the computation. So this will work with the
 40k members workspace challenge, but now I'm curious what does it take for
 PostgreSQL to do the same thing?
+
+# Using PostgreSQL
+
+```
+docker compose exec postgres psql -U learn
+```

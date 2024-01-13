@@ -1,5 +1,5 @@
-import { logger } from '../logger.js'
-import { client, database } from '../mongo.js'
+import { logger } from '../../logger.js'
+import { client, database } from '../../mongo.js'
 
 const COLLECTIONS = ['users', 'workspaces', 'workspaceMembers'] as const
 

@@ -1,10 +1,10 @@
 import { nanoid } from 'nanoid'
-import { logger } from '../logger.js'
+import { logger } from '../../logger.js'
 import { faker } from '@faker-js/faker'
-import { client, database } from '../mongo.js'
-import type { Workspace } from '../types/workspace.js'
-import type { User } from '../types/user.js'
-import type { WorkspaceMember } from '../types/workspace-member.js'
+import { client, database } from '../../mongo.js'
+import type { Workspace } from '../../types/workspace.js'
+import type { User } from '../../types/user.js'
+import type { WorkspaceMember } from '../../types/workspace-member.js'
 
 const MAX_MEMBERS_PER_WORKSPACE = 40_000
 const MAX_USERS = 5_000_000

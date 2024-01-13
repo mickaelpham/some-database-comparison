@@ -9,5 +9,16 @@ services:
     volumes:
       - db-data:/data/db
 
+  postgres:
+    image: postgres
+    ports:
+      - '5432:5432'
+    environment:
+      POSTGRES_USER: learn
+      POSTGRES_PASSWORD: example
+    volumes:
+      - pg-data:/var/lib/postgresql/data
+
 volumes:
   db-data:
+  pg-data:
