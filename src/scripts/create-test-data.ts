@@ -2,14 +2,14 @@ import { nanoid } from 'nanoid'
 import { logger } from '../logger.js'
 import { faker } from '@faker-js/faker'
 import { client, database } from '../mongo.js'
-import _ from 'lodash'
 import type { Workspace } from '../types/workspace.js'
 import type { User } from '../types/user.js'
 import type { WorkspaceMember } from '../types/workspace-member.js'
 
-const MAX_MEMBERS_PER_WORKSPACE = 100
-const MAX_USERS = 10000
-const MAX_WORKSPACES = 100
+const MAX_MEMBERS_PER_WORKSPACE = 40_000
+const MAX_USERS = 5_000_000
+const MAX_WORKSPACES = 10_000
+const MAX_USERS_TO_INSERT = 10_000
 
 const newWorkspace = (): Workspace => ({
   id: `workspace_${nanoid()}`,
@@ -44,25 +44,36 @@ const run = async (): Promise<void> => {
   const users: User[] = []
   for (let i = 0; i < MAX_USERS; i++) {
     users.push(newUser())
+
+    if (users.length === MAX_USERS_TO_INSERT || i === MAX_USERS - 1) {
+      await database.collection<User>('users').insertMany(users)
+      logger.info(`successfully inserted ${users.length} users`)
+      // clear the array
+      users.length = 0
+    }
   }
-  await database.collection<User>('users').insertMany(users)
-  logger.info(`successfully inserted ${users.length} users`)
 
   // finally sample users and add them as workspace members
-  const members: WorkspaceMember[] = []
   for (const workspace of workspaces) {
-    const sample: WorkspaceMember[] = _.sampleSize<User>(
-      users,
-      MAX_MEMBERS_PER_WORKSPACE,
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-    ).map(user => newWorkspaceMember(workspace.id, user.id))
+    const sample = await database
+      .collection<User>('users')
+      .aggregate<{ id: string }>([
+        { $sample: { size: MAX_MEMBERS_PER_WORKSPACE } },
+        { $project: { id: 1 } },
+      ])
+      .toArray()
 
-    members.push(...sample)
+    const userIds = Array.from(new Set(sample.map(u => u.id)))
+
+    await database
+      .collection<WorkspaceMember>('workspaceMembers')
+      .insertMany(
+        userIds.map(userId => newWorkspaceMember(workspace.id, userId)),
+      )
+    logger.info(
+      `successfully added ${userIds.length} members to workspace "${workspace.name}"`,
+    )
   }
-  await database
-    .collection<WorkspaceMember>('workspaceMembers')
-    .insertMany(members)
-  logger.info(`successfully inserted ${members.length} workspace members`)
 
   await client.close()
 }
