@@ -22,6 +22,7 @@ interface User {
 interface WorkspaceMember {
   workspaceId: Workspace['id']
   userId: User['id']
+  suspended: boolean
 }
 
 const newWorkspace = (): Workspace => ({
@@ -33,6 +34,15 @@ const newUser = (): User => ({
   id: `user_${nanoid()}`,
   email: faker.internet.email(),
   locked: Math.random() > 0.8,
+})
+
+const newWorkspaceMember = (
+  workspaceId: Workspace['id'],
+  userId: User['id'],
+): WorkspaceMember => ({
+  userId,
+  workspaceId,
+  suspended: Math.random() > 0.9,
 })
 
 const run = async (): Promise<void> => {
@@ -55,13 +65,11 @@ const run = async (): Promise<void> => {
   // finally sample users and add them as workspace members
   const members: WorkspaceMember[] = []
   for (const workspace of workspaces) {
-    const sample: WorkspaceMember[] = _.sampleSize(
+    const sample: WorkspaceMember[] = _.sampleSize<User>(
       users,
       MAX_MEMBERS_PER_WORKSPACE,
-    ).map(user => ({
-      userId: user.id,
-      workspaceId: workspace.id,
-    }))
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+    ).map(user => newWorkspaceMember(workspace.id, user.id))
 
     members.push(...sample)
   }
