@@ -1,0 +1,13 @@
+services:
+  mongo:
+    image: mongo:4.4
+    ports:
+      - '27017:27017'
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: learn
+      MONGO_INITDB_ROOT_PASSWORD: example
+    volumes:
+      - db-data:/data/db
+
+volumes:
+  db-data:
