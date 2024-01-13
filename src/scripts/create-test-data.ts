@@ -3,27 +3,13 @@ import { logger } from '../logger.js'
 import { faker } from '@faker-js/faker'
 import { client, database } from '../mongo.js'
 import _ from 'lodash'
+import type { Workspace } from '../types/workspace.js'
+import type { User } from '../types/user.js'
+import type { WorkspaceMember } from '../types/workspace-member.js'
 
 const MAX_MEMBERS_PER_WORKSPACE = 100
 const MAX_USERS = 10000
 const MAX_WORKSPACES = 100
-
-interface Workspace {
-  id: string
-  name: string
-}
-
-interface User {
-  id: string
-  email: string
-  locked: boolean
-}
-
-interface WorkspaceMember {
-  workspaceId: Workspace['id']
-  userId: User['id']
-  suspended: boolean
-}
 
 const newWorkspace = (): Workspace => ({
   id: `workspace_${nanoid()}`,
