@@ -1,4 +1,28 @@
-# Counting members
+# README
+
+Just a small application to compare insertion and count between MongoDB and
+PostgreSQL.
+
+## Setup
+
+```sh
+docker compose up -d
+npm i
+npm run build
+```
+
+Add the configuration to the environment variables.
+
+```sh
+cp .env.sample .env
+```
+
+Then run the scripts in `dist/scripts/pg` or `dist/scripts/mongo` to populate
+the test data.
+
+# Using MongoDB
+
+## Counting members
 
 The `user` has a `locked` boolean attribute that disables the user for all
 workspaces. A `member` can also be `suspended` from a specific workspace. So the
@@ -8,7 +32,7 @@ the `user` level) nor `suspended` (at the `workspace` level).
 Everyone else is an `inactive` member, i.e., they can be `locked`, `suspended`,
 or both.
 
-# Performance
+## Performance
 
 Before adding indexes to the collection, with the following numbers:
 
