@@ -2,9 +2,9 @@ import { faker } from '@faker-js/faker'
 import { pool } from '../../postgres.js'
 import { logger } from '../../logger.js'
 
-const MAX_MEMBERS_PER_WORKSPACE = 100
-const MAX_USERS = 10_000
-const MAX_WORKSPACES = 100
+const MAX_MEMBERS_PER_WORKSPACE = 40_000
+const MAX_USERS = 5_000_000
+const MAX_WORKSPACES = 10_000
 
 for (let i = 0; i < MAX_WORKSPACES; i++) {
   await pool.query('INSERT INTO workspaces (name) VALUES ($1)', [
@@ -18,6 +18,10 @@ for (let i = 0; i < MAX_USERS; i++) {
     faker.internet.email(),
     Math.random() > 0.8,
   ])
+
+  if (i % 1000 === 0) {
+    logger.info(`inserted ${i} of ${MAX_USERS} users`)
+  }
 }
 logger.info(`successfully inserted ${MAX_USERS} users`)
 

@@ -35,7 +35,7 @@ Let me crank the number by 10x.
 
 ```ts
 const MAX_MEMBERS_PER_WORKSPACE = 1_000
-const MAX_USERS = 100_0000
+const MAX_USERS = 1_000_000
 const MAX_WORKSPACES = 1_000
 ```
 
@@ -73,3 +73,40 @@ PostgreSQL to do the same thing?
 ```
 docker compose exec postgres psql -U learn
 ```
+
+```ts
+const MAX_MEMBERS_PER_WORKSPACE = 100
+const MAX_USERS = 10_000
+const MAX_WORKSPACES = 100
+```
+
+Slowest was **4 ms** for a workspace. It's about twice as fast as Mongo but the
+insertion was a lot slower (because I do the insert one row at a time).
+
+Let's crank the numbers by 10x.
+
+```ts
+const MAX_MEMBERS_PER_WORKSPACE = 1_000
+const MAX_USERS = 1_000_0000
+const MAX_WORKSPACES = 1_000
+```
+
+Blazing fast, we stay under **5 ms** this time.
+
+Let's finish up the number by going another 10x.
+
+```ts
+const MAX_MEMBERS_PER_WORKSPACE = 40_000
+const MAX_USERS = 5_000_000
+const MAX_WORKSPACES = 10_000
+```
+
+Here, we got nowhere unfortunately. Probably need some tuning, but after running
+the computer for 10+ hours, there was only 40M records inserted in the
+`workspace_members` (out of 400M, so 10% inserted). The insertion is really
+slow.
+
+Also the performance to count them is also kinda slow, with some count going
+over **500 ms**. So if it's slowing down that much then maybe it will be even
+slower with the rest of the records. So the tl;dr is that PostgreSQL was good
+until it wasn't, whereas MongoDB had a more linear latency deterioration.
