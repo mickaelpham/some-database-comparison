@@ -134,3 +134,34 @@ Also the performance to count them is also kinda slow, with some count going
 over **500 ms**. So if it's slowing down that much then maybe it will be even
 slower with the rest of the records. So the tl;dr is that PostgreSQL was good
 until it wasn't, whereas MongoDB had a more linear latency deterioration.
+
+## Refactor update and hardware change
+
+After I refactored the code and run it on the M2 laptop from work, I managed to
+insert the following numbers into PostgreSQL.
+
+```ts
+const MAX_MEMBERS_PER_WORKSPACE = 40_000
+const MAX_USERS = 5_000_000
+const MAX_WORKSPACES = 10_000
+```
+
+Note that the docker volume is now a whooping 28.8 GB in Docker Desktop
+dashboard! Running the following command to get the size information:
+
+```sql
+SELECT pg_size_pretty(pg_relation_size('workspaces'))
+```
+
+| table or index              | size   |
+| --------------------------- | ------ |
+| `workspaces`                | 544 kB |
+| `users`                     | 290 MB |
+| `workspace_members`         | 16 GB  |
+| indexes `workspaces`        | 240 kB |
+| indexes `users`             | 107 MB |
+| indexes `workspace_members` | 11 GB  |
+
+Running the count on the M2 consistently returns count results in less then
+**200 ms** but that might just be a hardware upgrade. I can try running on my
+Intel back at home.
