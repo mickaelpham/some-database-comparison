@@ -165,3 +165,7 @@ SELECT pg_size_pretty(pg_relation_size('workspaces'))
 Running the count on the M2 consistently returns count results in less then
 **200 ms** but that might just be a hardware upgrade. I can try running on my
 Intel back at home.
+
+For **MonboDB** running on the M2, the performances were fastter, but it's still
+slower thank PostgresL, with some running at over **900 ms** and a lot around
+**600 ms**.

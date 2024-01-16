@@ -5,11 +5,13 @@ import { client, database } from '../../mongo.js'
 import type { Workspace } from '../../types/workspace.js'
 import type { User } from '../../types/user.js'
 import type { WorkspaceMember } from '../../types/workspace-member.js'
+import * as _ from 'lodash-es'
 
 const MAX_MEMBERS_PER_WORKSPACE = 40_000
 const MAX_USERS = 5_000_000
 const MAX_WORKSPACES = 10_000
-const MAX_USERS_TO_INSERT = 10_000
+const WORKSPACE_CHUNKS_FOR_MEMBERS_INSERT = 10
+const MAX_USERS_TO_INSERT = 100_000
 
 const newWorkspace = (): Workspace => ({
   id: `workspace_${nanoid()}`,
@@ -33,45 +35,36 @@ const newWorkspaceMember = (
 
 const run = async (): Promise<void> => {
   // create workspaces
-  const workspaces: Workspace[] = []
-  for (let i = 0; i < MAX_WORKSPACES; i++) {
-    workspaces.push(newWorkspace())
-  }
+  const workspaces = _.times(MAX_WORKSPACES, () => newWorkspace())
   await database.collection<Workspace>('workspaces').insertMany(workspaces)
   logger.info(`successfully inserted ${workspaces.length} workspaces`)
 
   // then create users
-  const users: User[] = []
-  for (let i = 0; i < MAX_USERS; i++) {
-    users.push(newUser())
-
-    if (users.length === MAX_USERS_TO_INSERT || i === MAX_USERS - 1) {
-      await database.collection<User>('users').insertMany(users)
-      logger.info(`successfully inserted ${users.length} users`)
-      // clear the array
-      users.length = 0
-    }
+  const users = _.times(MAX_USERS, () => newUser())
+  const userChunks = _.chunk(users, MAX_USERS_TO_INSERT)
+  for (const chunk of userChunks) {
+    await database.collection<User>('users').insertMany(chunk)
+    logger.info(`successfully inserted ${chunk.length} users`)
   }
 
-  // finally sample users and add them as workspace members
-  for (const workspace of workspaces) {
-    const sample = await database
-      .collection<User>('users')
-      .aggregate<{ id: string }>([
-        { $sample: { size: MAX_MEMBERS_PER_WORKSPACE } },
-        { $project: { id: 1 } },
-      ])
-      .toArray()
-
-    const userIds = Array.from(new Set(sample.map(u => u.id)))
+  // finally add the workspace members
+  const workspaceChunks = _.chunk(
+    workspaces,
+    WORKSPACE_CHUNKS_FOR_MEMBERS_INSERT,
+  )
+  for (const chunk of workspaceChunks) {
+    const docs = chunk.map(workspace =>
+      _.sampleSize(users, MAX_MEMBERS_PER_WORKSPACE).map(user =>
+        newWorkspaceMember(workspace.id, user.id),
+      ),
+    )
 
     await database
       .collection<WorkspaceMember>('workspaceMembers')
-      .insertMany(
-        userIds.map(userId => newWorkspaceMember(workspace.id, userId)),
-      )
+      .insertMany(_.flatten(docs))
+
     logger.info(
-      `successfully added ${userIds.length} members to workspace "${workspace.name}"`,
+      `successfully added ${MAX_MEMBERS_PER_WORKSPACE} members to ${WORKSPACE_CHUNKS_FOR_MEMBERS_INSERT} workspaces each`,
     )
   }
 
